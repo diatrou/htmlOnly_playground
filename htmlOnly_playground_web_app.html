@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML Code Playground</title>
+
+  <!-- CodeMirror CSS & Themes -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/foldgutter.min.css">
+
+  <style>
+    /* Βασικοί κανόνες μορφοποίησης σελίδας */
+    /* Basic page styling rules */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f3f4f6;
+      color: #1f2937;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 950px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Μπάρα Καρτελών (Μόνο HTML) */
+    /* Tabs header container (HTML only) */
+    .tabs-bar {
+      display: flex;
+      justify-content: center;
+      background-color: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      padding-top: 6px;
+    }
+
+    .tab-button {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid #4f46e5;
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #4f46e5;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    /* Πλαίσιο επεξεργαστή κώδικα */
+    /* Code editor wrapper */
+    .editor-wrapper {
+      position: relative;
+      background-color: #282a36;
+      display: block;
+    }
+
+    .editor-wrapper.collapsed {
+      display: none;
+    }
+
+    .CodeMirror {
+      height: 260px;
+      font-family: "Fira Code", Monaco, Consolas, "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    /* Badge ένδειξης γλώσσας στο πάνω δεξιά μέρος */
+    /* Language badge overlay at top right */
+    .lang-badge {
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      z-index: 10;
+      background-color: #ffffff;
+      color: #374151;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 3px;
+      text-transform: lowercase;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 0.2s ease;
+    }
+
+    .editor-wrapper:hover .lang-badge {
+      opacity: 0.35;
+    }
+
+    /* Πλαίσιο αποτελέσματος (Preview frame) */
+    /* Output result preview frame */
+    .preview-container {
+      height: 220px;
+      background-color: #ffffff;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Κάτω μπάρα ενεργειών */
+    /* Action buttons footer bar */
+    .footer-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 12px 16px;
+      background-color: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .btn {
+      padding: 6px 16px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid #d1d5db;
+      background-color: #ffffff;
+      color: #374151;
+      transition: background-color 0.15s ease;
+    }
+
+    .btn:hover {
+      background-color: #f3f4f6;
+    }
+
+    .btn-reset {
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- Μπάρα Καρτελών -->
+    <!-- Tabs Header Bar -->
+    <div class="tabs-bar" id="tabsBar">
+      <button class="tab-button" onclick="toggleEditorCollapse()">HTML</button>
+    </div>
+
+    <!-- Πλαίσιο Επεξεργασίας Κώδικα -->
+    <!-- Code Editor Wrapper -->
+    <div class="editor-wrapper" id="editorWrapper">
+      <div class="lang-badge">html</div>
+      <textarea id="codeTextArea"></textarea>
+    </div>
+
+    <!-- Πλαίσιο Αποτελέσματος / Rendering -->
+    <!-- Live Rendering Preview Frame -->
+    <div class="preview-container">
+      <iframe id="previewIframe"></iframe>
+    </div>
+
+    <!-- Κουμπιά Ενεργειών -->
+    <!-- Action Buttons -->
+    <div class="footer-bar">
+      <button class="btn" onclick="saveCurrentCode()">Αποθήκευση</button>
+      <button class="btn btn-reset" onclick="resetCurrentCode()">Επαναφορά</button>
+    </div>
+
+  </div>
+
+  <!-- CodeMirror JS dependencies -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/foldcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/foldgutter.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/xml-fold.min.js"></script>
+
+  <script>
+    // Κατάσταση της εφαρμογής (Μόνο HTML)
+    // Application state (HTML only)
+    const defaultCode = "<html>\n<head>\n  <title>Exercise 1</title>\n</head>\n<body>\n  <h1>Hello World</h1>\n</body>\n</html>";
+    let currentCode = defaultCode;
+    let editorCollapsed = false;
+    let editorInstance = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      editorInstance = CodeMirror.fromTextArea(document.getElementById("codeTextArea"), {
+        lineNumbers: true,
+        theme: "dracula",
+        mode: "htmlmixed",
+        foldGutter: true,
+        gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+        lineWrapping: true
+      });
+
+      editorInstance.setValue(currentCode);
+
+      editorInstance.on("change", () => {
+        currentCode = editorInstance.getValue();
+        updatePreview();
+      });
+
+      updatePreview();
+    });
+
+    // Σύμπτυξη / Εμφάνιση πλαισίου με κλικ στην καρτέλα
+    // Toggle editor collapse on tab click
+    function toggleEditorCollapse() {
+      editorCollapsed = !editorCollapsed;
+      document.getElementById('editorWrapper').classList.toggle('collapsed', editorCollapsed);
+    }
+
+    // Ενημέρωση του Live Preview iframe
+    // Update preview iframe content
+    function updatePreview() {
+      const iframe = document.getElementById('previewIframe');
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+      doc.open();
+      doc.write(currentCode);
+      doc.close();
+    }
+
+    // Αποθήκευση αρχείου HTML
+    // Download current HTML code file
+    function saveCurrentCode() {
+      const blob = new Blob([currentCode], { type: 'text/html;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'exercise.html';
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+
+    // Επαναφορά στον αρχικό προεπιλεγμένο κώδικα
+    // Reset code to default exercise code
+    function resetCurrentCode() {
+      currentCode = defaultCode;
+      editorInstance.setValue(currentCode);
+      updatePreview();
+    }
+  </script>
+</body>
+</html>
